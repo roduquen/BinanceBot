@@ -7,7 +7,7 @@ class HTTPClient:
     'high',
     'low',
     'close',
-    'volume'
+    'volume',
   ]
 
   def __init__(self, api_key_id, api_secret_key):

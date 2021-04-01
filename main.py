@@ -6,4 +6,4 @@ from binance_keys import *
 http_client = HTTPClient(api_key_id, secret_key)
 websocket_client = WebSocketClient(api_key_id, secret_key)
 
-array_1m = Array("1m", "BTCUSDT", http_client, websocket_client)
+array_1m = Array({"name" : "1m", "ms" : 60000}, "BTCUSDT", http_client)
