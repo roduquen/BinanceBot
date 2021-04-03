@@ -7,6 +7,7 @@ from binance_f.constant.test import *
 from computing.rsi import compute_rsi
 import mplfinance as mpf
 import matplotlib.animation as animation
+import matplotlib.pyplot as plt
 
 INDEX = 249
 
@@ -21,6 +22,8 @@ class Array:
   candles = None
   rsi = None
   show_graph = False
+  macd = None
+  signal = None
 
   def __init__(self, interval, symbol, http_client):
     self.interval = interval
@@ -32,7 +35,7 @@ class Array:
   def next_candle_time(self, client):
     result = int((int(self.candles[INDEX][0]) - round(time.time_ns() / 1000000) + int(self.interval["ms"]) + 1000) / 1000)
     if result <= 0:
-      result = 60
+      result = self.interval["ms"] / 1000
     return result
 
   def update_candles(self, client):
@@ -65,10 +68,19 @@ class Array:
     array = np.insert(self.candles, 6, self.rsi[:, 0], axis=1)
     array = np.insert(array, 7, self.rsi[:, 1], axis=1)
     df = pd.DataFrame(array, columns=columns)
+    self.compute_macd(df)
     df['Date'] = pd.to_datetime(df['Date'], unit='ms')
     df = df.set_index('Date')
     df.sort_values('Date', inplace=True)
     return df
+
+  def compute_macd(self, df):
+    exp1 = df.Close.ewm(span=12, adjust=False).mean()
+    exp2 = df.Close.ewm(span=26, adjust=False).mean()
+    macd = exp1-exp2
+    self.macd = macd.to_numpy()
+    signal = macd.ewm(span=9, adjust=False).mean()
+    self.signal = signal.to_numpy()
 
   def set_rsi(self):
     RSI_SIZE = 14
@@ -80,14 +92,28 @@ class Array:
 
   def show(self):
     show_graph = True
-    ap = mpf.make_addplot(
-      self.rsi[:, 0],
-      panel=2,
-      type='line',
-      ylabel='RSI',
-    )
+    candles = self.get_candles()
+    ap = [
+      mpf.make_addplot(
+        self.rsi[:, 0],
+        panel=2,
+        type='line',
+        ylabel='RSI',
+      ),
+      mpf.make_addplot(
+        self.macd,
+        panel=3,
+        type='line',
+        ylabel='MACD',
+      ),
+      mpf.make_addplot(
+        self.signal,
+        panel=3,
+        type='line',
+      ),
+    ]
     self.fig, self.axes = mpf.plot(
-      self.get_candles(),
+      candles,
       type='candle',
       title=self.symbol,
       style='binance',
@@ -100,6 +126,7 @@ class Array:
     mpf.show()
 
   def animate(self, ival):
+    candles = self.get_candles()
     for ax in self.axes:
         ax.clear()
     ap = mpf.make_addplot(
@@ -107,13 +134,41 @@ class Array:
       panel=2,
       type='line',
       ylabel='RSI',
-      ax=self.axes[4]
     )
+    ap = [
+      mpf.make_addplot(
+        self.rsi[:, 0],
+        panel=2,
+        type='line',
+        ylabel='RSI',
+        ax=self.axes[4]
+      ),
+      mpf.make_addplot(
+        self.macd,
+        panel=3,
+        type='line',
+        ylabel='MACD',
+        ax=self.axes[6],
+        color="blue"
+      ),
+      mpf.make_addplot(
+        self.signal,
+        panel=3,
+        type='line',
+        ax=self.axes[7],
+        color="red"
+      ),
+    ]
+    self.axes[0].set_facecolor((0.2, 0.2, 0.2))
+    self.axes[2].set_facecolor((0.2, 0.2, 0.2))
+    self.axes[4].set_facecolor((0.2, 0.2, 0.2))
+    self.axes[6].set_facecolor((0.2, 0.2, 0.2))
     self.axes[4].set_ylim([0, 100])
     self.axes[4].axline((0, 70), (1, 70), color='red', linewidth=1, dashes=(.5, .5))
     self.axes[4].axline((0, 30), (1, 30), color='green', linewidth=1, dashes=(.5, .5))
+    self.axes[6].set_ylim([-1, 1])
     mpf.plot(
-      self.get_candles(),
+      candles,
       type='candle',
       style='binance',
       mav=(3, 6, 9),
@@ -121,4 +176,3 @@ class Array:
       ax = self.axes[0],
       volume=self.axes[2]
     )
-
