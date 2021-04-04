@@ -4,7 +4,6 @@ import time
 import threading
 from timeframe.timeframe import Timeframe
 from binance_f.constant.test import *
-from binance_f.base.printobject import *
 from binance_f.model.constant import *
 
 class MACD_strategy:
@@ -38,7 +37,6 @@ class MACD_strategy:
     self.timeframe = Timeframe(interval, symbol, http_client, self.launch_strategy, self.members)
 
   def launch_strategy(self, values):
-    print(self.symbol, " HAS BEEN LAUNCHED/UPDATED")
     uptrend = None
     downtrend = None
     signal_up = None
@@ -72,11 +70,11 @@ class MACD_strategy:
         if market <= self.stop_loss:
           self.exit_position()
           self.loss += 1
-          print("TOTAL LOSS: ", self.loss, "\n", "TOTAL GAIN: ", self.profit)
+          print(self.symbol, ": TOTAL LOSS => ", self.loss, " TOTAL GAIN => ", self.profit)
         if self.target_reached is True and market <= self.take_profit:
           self.exit_position()
           self.profit += 1
-          print("TOTAL LOSS: ", self.loss, "\n", "TOTAL GAIN: ", self.profit)
+          print(self.symbol, ": TOTAL LOSS => ", self.loss, " TOTAL GAIN => ", self.profit)
         elif self.target_reached is False and market >= self.take_profit:
           self.start_grinding()
 
