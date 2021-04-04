@@ -70,11 +70,11 @@ class MACD_strategy:
         if market <= self.stop_loss:
           self.exit_position()
           self.loss += 1
-          print(self.symbol, ": TOTAL LOSS => ", self.loss, " TOTAL GAIN => ", self.profit)
+          print("MAGESSTY : ", self.symbol, ": TOTAL LOSS => ", self.loss, " TOTAL GAIN => ", self.profit)
         if self.target_reached is True and market <= self.take_profit:
           self.exit_position()
           self.profit += 1
-          print(self.symbol, ": TOTAL LOSS => ", self.loss, " TOTAL GAIN => ", self.profit)
+          print("MAGESSTY : ", self.symbol, ": TOTAL LOSS => ", self.loss, " TOTAL GAIN => ", self.profit)
         elif self.target_reached is False and market >= self.take_profit:
           self.start_grinding()
 
@@ -135,6 +135,7 @@ class MACD_strategy:
         symbol,
         quantity
       )
+      print("MAGESSTY : Enter Long => ", self.avg_price)
       self.quantity = quantity
       self.stop_loss = self.avg_price * 0.99
       self.take_profit = self.avg_price * 1.0125
@@ -153,6 +154,7 @@ class MACD_strategy:
         symbol,
         quantity
       )
+      print("MAGESSTY : Enter Short => ", self.avg_price)
       self.quantity = quantity
       self.stop_loss = self.avg_price * 1.01
       self.take_profit = self.avg_price * 0,9875
