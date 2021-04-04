@@ -31,12 +31,13 @@ class HTTPClient:
         array = np.append(array, [candle_x], axis=0)
     return array
 
-  def market_order(self, side, symbol, quantity):
+  def market_order(self, side, symbol, quantity, reduce_only = False):
     result = self.client.post_order(
       symbol=symbol,
       side=side,
       ordertype="MARKET",
-      quantity=quantity
+      quantity=quantity,
+      reduceOnly=reduce_only
     )
     order_id = int(getattr(result, 'orderId'))
     return self.get_avg_price(symbol, order_id)

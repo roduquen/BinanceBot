@@ -82,7 +82,8 @@ class MACD_strategy:
     self.http_client.market_order(
       side,
       self.symbol,
-      self.quantity
+      self.quantity,
+      true
     )
     self.position = None
     self.quantity = None
@@ -125,6 +126,8 @@ class MACD_strategy:
 
 
   def enter_long(self):
+    if self.in_trade is True:
+      self.exit_position()
     side = "BUY"
     symbol = self.symbol
     quantity = self.compute_quantity()
@@ -140,6 +143,8 @@ class MACD_strategy:
     self.in_trade = True
 
   def enter_short(self):
+    if self.in_trade is True:
+      self.exit_position()
     side = "SELL"
     symbol = self.symbol
     quantity = self.compute_quantity()
