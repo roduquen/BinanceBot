@@ -29,8 +29,6 @@ class MACD_strategy:
 
   def __init__(self, interval, symbol, min_quantity, portefolio, http_client, websocket_client):
     websocket_client.get_market(self.callback_websocket, symbol.lower())
-    while self.market_price is None:
-      time.sleep(1)
     self.http_client = http_client
     self.interval = interval
     self.symbol = symbol
@@ -62,6 +60,9 @@ class MACD_strategy:
         and signal_down is True and signal_down2 is False
         and macd_pos is True and macd_pos2 is True):
         self.enter_short()
+      if self.in_trade is True and self.target_reached is True:
+        self.take_profit = (self.take_profit + self.candles[self.index, 4]) / 2
+
 
   def callback_websocket(self, market):
     self.market_price = market
@@ -97,17 +98,10 @@ class MACD_strategy:
 
   def start_grinding(self):
     def callback():
-      time.sleep(30)
+      time.sleep(60)
       if ((self.position == "LONG" and self.market_value >= self.take_profit)
         or (position == "SHORT" and self.market_value <= self.take_profit)):
-        while self.in_trade is True:
-          self.target_reached = True
-          new_take_profit = (self.take_profit + self.market_price) / 2
-          if self.position == "LONG" and new_take_profit > self.take_profit:
-            self.take_profit = new_take_profit
-          if self.position == "SHORT" and new_take_profit < self.take_profit:
-            self.take_profit = new_take_profit
-          time.sleep(60)
+        self.target_reached = True
       return
     self.thread = threading.Thread(target=callback)
     self.thread.start()
