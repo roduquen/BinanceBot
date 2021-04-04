@@ -213,7 +213,7 @@ class Timeframe:
     self.axes[4].set_ylim([0, 100])
     self.axes[4].axline((0, 70), (1, 70), color='red', linewidth=1, dashes=(.5, .5))
     self.axes[4].axline((0, 30), (1, 30), color='green', linewidth=1, dashes=(.5, .5))
-    self.axes[6].set_ylim([-1, 1])
+    self.axes[6].set_ylim([-100, 100])
     self.axes[6].axline((0, 0), (1, 0), color='black', linewidth=1, dashes=(.5, .5))
     mpf.plot(
       candles,
