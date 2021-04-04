@@ -1,11 +1,9 @@
 from client.websocket_client import WebSocketClient
 from client.http_client import HTTPClient
-from array_class.array import Array
+from strategy.macd_strategy import MACD_strategy
 from binance_keys import *
 
 http_client = HTTPClient(api_key_id, secret_key)
 websocket_client = WebSocketClient(api_key_id, secret_key)
 
-array_1m = Array({"name" : "1m", "ms" : 60000}, "LTCUSDT", http_client)
-
-array_1m.show()
+macd_strat = MACD_strategy({"name" : "30m", "ms" : 1800000}, "BTCUSDT", 0.001, 1000, http_client, websocket_client)

@@ -1,5 +1,6 @@
 from binance_f import RequestClient
 import numpy as np
+from binance_f.base.printobject import *
 
 class HTTPClient:
   members = [
@@ -29,3 +30,17 @@ class HTTPClient:
       else:
         array = np.append(array, [candle_x], axis=0)
     return array
+
+  def market_order(self, side, symbol, quantity):
+    result = self.client.post_order(
+      symbol=symbol,
+      side=side,
+      ordertype="MARKET",
+      quantity=quantity
+    )
+    order_id = int(getattr(result, 'orderId'))
+    return self.get_avg_price(symbol, order_id)
+
+  def get_avg_price(self, symbol, order_id):
+    result = self.client.get_order(symbol=symbol, orderId=order_id)
+    return float(getattr(result, 'avgPrice'))

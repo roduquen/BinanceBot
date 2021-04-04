@@ -2,6 +2,7 @@ import numpy as np
 from binance_f import SubscriptionClient
 from binance_f.model import *
 from binance_f.exception.binanceapiexception import BinanceApiException
+from binance_f.base.printobject import *
 
 class WebSocketClient:
   members = [
@@ -24,6 +25,16 @@ class WebSocketClient:
     self.client.subscribe_candlestick_event(
       symbol,
       interval,
+      callback,
+      self.error
+    )
+
+  def get_market(self, clbk, symbol):
+    def callback(data_type: 'SubscribeMessageType', event: 'any'):
+      if data_type == SubscribeMessageType.PAYLOAD:
+        clbk(float(getattr(event, "markPrice")))
+    self.client.subscribe_mark_price_event(
+      symbol,
       callback,
       self.error
     )

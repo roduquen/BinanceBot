@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 
 INDEX = 249
 
-class Array:
+class Timeframe:
   members = [
     'open',
     'high',
@@ -27,12 +27,14 @@ class Array:
   macd = None
   macd_signal = None
 
-  def __init__(self, interval, symbol, http_client):
+  def __init__(self, interval, symbol, http_client, clbk = None, clbk_args = ['candles']):
     self.interval = interval
     self.symbol = symbol
+    self.clbk = clbk
+    self.clbk_args = clbk_args
     self.set_candles(http_client)
-    thread = threading.Thread(target=self.update_candles, args=(http_client,))
-    thread.start()
+    self.thread = threading.Thread(target=self.update_candles, args=(http_client,))
+    self.thread.start()
 
   #############################
   #                           #
@@ -40,31 +42,30 @@ class Array:
   #                           #
   #############################
 
-  def next_candle_time(self, client):
-    result = int((int(self.candles[INDEX][0]) - round(time.time_ns() / 1000000) + int(self.interval["ms"]) + 1000) / 1000)
-    if result <= 0:
-      result = self.interval["ms"] / 1000
+  def next_candle_time(self):
+    result = int((int(self.candles[INDEX, 0]) - round(time.time_ns() / 1000000) + int(self.interval["ms"]) + 1000) / 1000)
+    if result < 0:
+      result = 1
     return result
 
   def set_candles(self, client):
     self.candles = client.get_candles(self.symbol, self.interval["name"], INDEX + 1)
     self.set_indicators()
+    self.launch_strategy()
 
   def update_candles(self, client):
     while True:
-      time.sleep(self.next_candle_time(client))
+      time.sleep(self.next_candle_time())
       new_candle = client.get_candles(self.symbol, self.interval["name"], 2)
-      if self.candles[INDEX, 0] < new_candle[0][0]:
+      if self.candles[INDEX, 0] < new_candle[0, 0]:
         self.candles = np.append(np.delete(self.candles, 0, axis=0), [new_candle[0]], axis=0)
-      if self.candles[INDEX, 0] < new_candle[1][0]:
+      if self.candles[INDEX, 0] < new_candle[1, 0]:
         self.candles = np.append(np.delete(self.candles, 0, axis=0), [new_candle[1]], axis=0)
         self.set_indicators()
-        self.get_candles()
+      self.launch_strategy()
 
   def get_candles(self):
-    columns = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume', 'RSI14_1', 'RSI14_2']
-    array = np.insert(self.candles, 6, self.rsi[:, 0], axis=1)
-    array = np.insert(array, 7, self.rsi[:, 1], axis=1)
+    columns = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume']
     df = pd.DataFrame(array, columns=columns)
     df['Date'] = pd.to_datetime(df['Date'], unit='ms')
     df = df.set_index('Date')
@@ -73,44 +74,55 @@ class Array:
 
   #############################
   #                           #
+  #         STRATEGYS         #
+  #                           #
+  #############################
+
+  def launch_strategy(self):
+    if self.clbk is not None:
+      array = []
+      for member in self.clbk_args:
+        if member == 'candles':
+          array.append(self.candles)
+        elif member == 'ema':
+          array.append(self.ema)
+        elif member == 'rsi':
+          array.append(self.rsi)
+        elif member == 'macd':
+          array.append(self.macd)
+        elif member == 'macd_signal':
+          array.append(self.macd_signal)
+      array.append(INDEX)
+      self.clbk(array)
+
+  #############################
+  #                           #
   #        INDICATORS         #
   #                           #
   #############################
 
   def set_indicators(self):
-    self.set_rsi()
-    self.set_macd()
-    self.set_ema()
+    for member in self.clbk_args:
+      if member == 'ema':
+        self.set_ema()
+      elif member == 'rsi':
+        self.set_rsi()
+      elif member == 'macd':
+        self.set_macd()
 
   def set_macd(self):
     MACD_SIZE = 26
     SPANS = [12, MACD_SIZE]
     SIGNAL_SPAN = 9
-    if self.macd is None:
-      self.macd, self.macd_signal = compute_macd(self.candles[:, 4], SPANS, SIGNAL_SPAN)
-    else:
-      new_macd, new_signal = compute_macd(self.candles[-(MACD_SIZE + 1):,  4], SPANS, SIGNAL_SPAN)
-      new_macd = new_macd[MACD_SIZE]
-      new_signal = new_signal[MACD_SIZE]
-      self.macd = np.append(np.delete(self.macd, 0, axis=0), [new_macd], axis=0)
-      self.macd_signal = np.append(np.delete(self.macd_signal, 0, axis=0), [new_signal], axis=0)
-
+    self.macd, self.macd_signal = compute_macd(self.candles[:, 4], SPANS, SIGNAL_SPAN)
 
   def set_rsi(self):
     RSI_SIZE = 14
-    if self.rsi is None:
-      self.rsi = compute_rsi(self.candles[:, 4], RSI_SIZE)
-    else:
-      new_rsi = compute_rsi(self.candles[-(RSI_SIZE + 1):,  4], RSI_SIZE)[RSI_SIZE]
-      self.rsi = np.append(np.delete(self.rsi, 0, axis=0), [new_rsi], axis=0)
+    self.rsi = compute_rsi(self.candles[:, 4], RSI_SIZE)
 
   def set_ema(self):
     EMA_SIZE = 100
-    if self.ema is None:
-      self.ema = compute_ema(self.candles[:, 4], EMA_SIZE)
-    else:
-      new_ema = compute_ema(self.candles[-(EMA_SIZE + 1):,  4], EMA_SIZE)[EMA_SIZE]
-      self.ema = np.append(np.delete(self.ema, 0, axis=0), [new_ema], axis=0)
+    self.ema = compute_ema(self.candles[:, 4], EMA_SIZE)
 
   #############################
   #                           #
@@ -155,7 +167,7 @@ class Array:
       volume=True,
       returnfig=True
     )
-    self.ani = animation.FuncAnimation(self.fig,self.animate,interval=50)
+    self.ani = animation.FuncAnimation(self.fig,self.animate,interval=self.interval["ms"])
     mpf.show()
 
   def animate(self, ival):
