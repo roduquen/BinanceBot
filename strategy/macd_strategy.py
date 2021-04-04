@@ -1,5 +1,7 @@
 import numpy as np
 import pandas as pd
+import time
+import threading
 from timeframe.timeframe import Timeframe
 from binance_f.constant.test import *
 from binance_f.base.printobject import *
@@ -21,10 +23,14 @@ class MACD_strategy:
   stop_loss = None
   take_profit = None
   target_reached = False
+  market_price = None
   profit = 0
   loss = 0
 
   def __init__(self, interval, symbol, min_quantity, portefolio, http_client, websocket_client):
+    websocket_client.get_market(self.callback_websocket, symbol.lower())
+    while self.market_price is None:
+      time.sleep(1)
     self.http_client = http_client
     self.interval = interval
     self.symbol = symbol
@@ -32,7 +38,6 @@ class MACD_strategy:
     self.portefolio = portefolio
     self.trade_value = portefolio / 25 # leverage
     self.timeframe = Timeframe(interval, symbol, http_client, self.launch_strategy, self.members)
-    websocket_client.get_market(self.callback_websocket, symbol.lower())
 
   def launch_strategy(self, values):
     uptrend = None
@@ -42,7 +47,6 @@ class MACD_strategy:
     macd_neg = None
     if self.candles is not None:
       uptrend, downtrend, signal_up, macd_pos, macd_neg = self.trend_values()
-      self.market_price = values[0][249, 4]
     self.candles = values[0]
     self.ema = values[1]
     self.macd = values[2]
@@ -59,19 +63,19 @@ class MACD_strategy:
         and macd_pos is True and macd_pos2 is True):
         self.enter_short()
 
-  def callback_websocket(self, market_value):
-    self.market_value = market_value
+  def callback_websocket(self, market):
+    self.market_price = market
     if self.in_trade is True:
       if self.position == "LONG":
-        if market_value <= self.stop_loss:
+        if market <= self.stop_loss:
           self.exit_position()
           self.loss += 1
           print("TOTAL LOSS: ", self.loss, "\n", "TOTAL GAIN: ", self.profit)
-        if self.target_reached is True and market_value <= self.take_profit:
+        if self.target_reached is True and market <= self.take_profit:
           self.exit_position()
           self.profit += 1
           print("TOTAL LOSS: ", self.loss, "\n", "TOTAL GAIN: ", self.profit)
-        elif self.target_reached is False and market_value >= self.take_profit:
+        elif self.target_reached is False and market >= self.take_profit:
           self.start_grinding()
 
   def exit_position(self):
