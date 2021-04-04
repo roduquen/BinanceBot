@@ -11,7 +11,7 @@ import mplfinance as mpf
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 
-INDEX = 249
+INDEX = 120
 
 class Timeframe:
   members = [

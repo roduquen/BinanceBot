@@ -38,6 +38,7 @@ class MACD_strategy:
     self.timeframe = Timeframe(interval, symbol, http_client, self.launch_strategy, self.members)
 
   def launch_strategy(self, values):
+    print(self.symbol, " HAS BEEN LAUNCHED/UPDATED")
     uptrend = None
     downtrend = None
     signal_up = None
