@@ -43,7 +43,7 @@ class MACD_strategy:
     macd_pos = None
     macd_neg = None
     if self.candles is not None:
-      uptrend, downtrend, signal_up, macd_pos, macd_neg = self.trend_values(-1)
+      uptrend, downtrend, signal_up, macd_pos, macd_neg = self.trend_values(True)
     self.candles = values[0]
     self.ema = values[1]
     self.macd = values[2]
@@ -105,13 +105,29 @@ class MACD_strategy:
     self.thread = threading.Thread(target=callback)
     self.thread.start()
 
-  def trend_values(self, padding = 0):
-    index = self.index + padding
+  def trend_values(self, first = False):
+    index = self.index
     uptrend = self.candles[index, 3] - self.ema[index] > 0
     downtrend = self.candles[index, 2] - self.ema[index] < 0
     signal_up = self.macd_signal[index] > self.macd[index]
     macd_pos = self.macd[index] > 0.05
     macd_neg = self.macd[index] < -0.05
+    print(
+      "MAGESSTY : ",
+      self.symbol,
+      " FIRST VALUES = ",
+      first,
+      " UPTREND = ",
+      uptrend,
+      " DOWNTREND = ",
+      downtrend,
+      " SIGNAL UP = ",
+      signal_up,
+      " MACD_POS = ",
+      macd_pos,
+      " MACD_NEG = ",
+      macd_neg
+    )
     return uptrend, downtrend, signal_up, macd_pos, macd_neg
 
   def compute_quantity(self):
