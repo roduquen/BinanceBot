@@ -52,21 +52,29 @@ class MACD_strategy:
     self.index = values[4]
     self.market_price = self.candles[self.index, 4]
     if opened is True:
-      uptrend, downtrend, signal_up, macd_pos, macd_neg = self.trend_values(True, -1)
-      uptrend2, downtrend2, signal_up2, macd_pos2, macd_neg2 = self.trend_values()
-      if uptrend2:
-        if signal_up:
-          if not signal_up2:
-            if macd_neg2:
-              self.enter_long()
-      elif downtrend2:
-        if not signal_up:
-          if signal_up2:
-            if macd_pos2:
-              self.enter_short()
+      uptrend, downtrend, signal_up, macd_pos, macd_neg, l, s = self.trend_values(True, -1)
+      uptrend2, downtrend2, signal_up2, macd_pos2, macd_neg2, possible_long, possible_short = self.trend_values()
+      if possible_long:
+        if uptrend2:
+          if signal_up:
+            if not signal_up2:
+              if macd_neg2:
+                self.enter_long()
+      elif possible_short:
+        if downtrend2:
+          if not signal_up:
+            if signal_up2:
+              if macd_pos2:
+                self.enter_short()
       if self.in_trade is True:
         if self.target_reached is True:
-          self.take_profit = (self.take_profit + self.candles[self.index, 4]) / 2
+          new_take_profit = (self.ema[self.index - 1] + self.candles[self.index - 1, 4]) / 2
+          if self.position == "LONG":
+            if new_take_profit > self.take_profit:
+              self.take_profit = new_take_profit
+          else:
+            if new_take_profit < self.take_profit:
+              self.take_profit = new_take_profit
         self.strategy_launched(self.candles[self.index, 4])
 
   def strategy_launched(self, market):
@@ -84,12 +92,10 @@ class MACD_strategy:
         elif self.target_reached is False and market >= self.take_profit:
           self.start_grinding()
       else:
-        print(market, self.stop_loss)
         if market >= self.stop_loss:
           self.exit_position()
           self.loss += 1
           print(datetime.now(), " : ", self.symbol, ": TOTAL LOSS => ", self.loss, " TOTAL GAIN => ", self.profit)
-        print(self.target_reached, market, self.take_profit)
         if self.target_reached is True and market >= self.take_profit:
           self.exit_position()
           self.profit += 1
@@ -127,12 +133,22 @@ class MACD_strategy:
 
   def trend_values(self, first = False, padding = 0):
     index = self.index + padding
-    uptrend = self.candles[index, 3] > self.ema[index]
-    downtrend = self.candles[index, 2] < self.ema[index]
+    i = index - 11
+    uptrend = True
+    while uptrend and i < index:
+      uptrend = (self.candles[i, 3] + self.candles[i, 2]) / 2 > self.ema[i]
+      i += 1
+    i = index - 11
+    downtrend = True
+    while downtrend and i < index:
+      downtrend = (self.candles[i, 3] + self.candles[i, 2]) < self.ema[i]
+      i += 1
     signal_up = self.macd_signal[index] > self.macd[index]
     macd_pos = self.macd[index] >= 0
     macd_neg = self.macd[index] < 0
-    return uptrend, downtrend, signal_up, macd_pos, macd_neg
+    possible_long = self.candles[index, 4] >= self.ema[index] * 1.0125
+    possible_short = self.candels[index, 4] <= self.ema[index] * 0.9875
+    return uptrend, downtrend, signal_up, macd_pos, macd_neg, possible_long, possible_short
 
   def compute_quantity(self):
     price = self.market_price
@@ -152,8 +168,6 @@ class MACD_strategy:
 
 
   def enter_long(self):
-    if self.in_trade is True and self.position == "SHORT":
-      self.exit_position()
     if self.in_trade is False:
       side = "BUY"
       symbol = self.symbol
@@ -171,8 +185,6 @@ class MACD_strategy:
       self.in_trade = True
 
   def enter_short(self):
-    if self.in_trade is True and self.position == "LONG":
-      self.exit_position()
     if self.in_trade is False:
       side = "SELL"
       symbol = self.symbol
