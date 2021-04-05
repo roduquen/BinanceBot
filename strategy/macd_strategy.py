@@ -51,8 +51,6 @@ class MACD_strategy:
     self.macd_signal = values[3]
     self.index = values[4]
     self.market_price = self.candles[self.index, 4]
-    if opened is False:
-      self.enter_short()
     if opened is True:
       uptrend, downtrend, signal_up, macd_pos, macd_neg = self.trend_values(True, -1)
       uptrend2, downtrend2, signal_up2, macd_pos2, macd_neg2 = self.trend_values()
