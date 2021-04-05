@@ -30,7 +30,7 @@ axs = MACD_strategy({"name" : "30m", "ms" : 1800000}, "AXSUSDT", 1, 300, http_cl
 chz = MACD_strategy({"name" : "30m", "ms" : 1800000}, "CHZUSDT", 1, 300, http_client, websocket_client)
 
 dot = MACD_strategy({"name" : "30m", "ms" : 1800000}, "DOTUSDT", 0.1, 300, http_client, websocket_client)
-1inch = MACD_strategy({"name" : "30m", "ms" : 1800000}, "1INCHUSDT", 1, 300, http_client, websocket_client)
+inch = MACD_strategy({"name" : "30m", "ms" : 1800000}, "1INCHUSDT", 1, 300, http_client, websocket_client)
 uni = MACD_strategy({"name" : "30m", "ms" : 1800000}, "UNIUSDT", 1, 300, http_client, websocket_client)
 sushi = MACD_strategy({"name" : "30m", "ms" : 1800000}, "SUSHIUSDT", 1, 300, http_client, websocket_client)
 sxp = MACD_strategy({"name" : "30m", "ms" : 1800000}, "SXPUSDT", 0.1, 300, http_client, websocket_client)
