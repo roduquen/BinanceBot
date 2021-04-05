@@ -42,14 +42,16 @@ class MACD_strategy:
     signal_up = None
     macd_pos = None
     macd_neg = None
+    open = False
     if self.candles is not None:
-      uptrend, downtrend, signal_up, macd_pos, macd_neg = self.trend_values(True)
+      open = True
     self.candles = values[0]
     self.ema = values[1]
     self.macd = values[2]
     self.macd_signal = values[3]
     self.index = values[4]
     if uptrend is not None:
+      uptrend, downtrend, signal_up, macd_pos, macd_neg = self.trend_values(True, -1)
       uptrend2, downtrend2, signal_up2, macd_pos2, macd_neg2 = self.trend_values()
       if (uptrend is True and uptrend2 is True
         and signal_up is True and signal_up2 is False
@@ -61,7 +63,6 @@ class MACD_strategy:
         self.enter_short()
       if self.in_trade is True and self.target_reached is True:
         self.take_profit = (self.take_profit + self.candles[self.index, 4]) / 2
-
 
   def callback_websocket(self, market):
     self.market_price = market
@@ -76,6 +77,17 @@ class MACD_strategy:
           self.profit += 1
           print("MAGESSTY : ", self.symbol, ": TOTAL LOSS => ", self.loss, " TOTAL GAIN => ", self.profit)
         elif self.target_reached is False and market >= self.take_profit:
+          self.start_grinding()
+      else:
+        if market >= self.stop_loss:
+          self.exit_position()
+          self.loss += 1
+          print("MAGESSTY : ", self.symbol, ": TOTAL LOSS => ", self.loss, " TOTAL GAIN => ", self.profit)
+        if self.target_reached is True and market >= self.take_profit:
+          self.exit_position()
+          self.profit += 1
+          print("MAGESSTY : ", self.symbol, ": TOTAL LOSS => ", self.loss, " TOTAL GAIN => ", self.profit)
+        elif self.target_reached is False and market <= self.take_profit:
           self.start_grinding()
 
   def exit_position(self):
@@ -105,10 +117,10 @@ class MACD_strategy:
     self.thread = threading.Thread(target=callback)
     self.thread.start()
 
-  def trend_values(self, first = False):
-    index = self.index
-    uptrend = self.candles[index, 3] - self.ema[index] > 0
-    downtrend = self.candles[index, 2] - self.ema[index] < 0
+  def trend_values(self, first = False, padding = 0):
+    index = self.index + padding
+    uptrend = self.candles[index, 3] > self.ema[index]
+    downtrend = self.candles[index, 2] < self.ema[index]
     signal_up = self.macd_signal[index] > self.macd[index]
     macd_pos = self.macd[index] > 0.05
     macd_neg = self.macd[index] < -0.05
