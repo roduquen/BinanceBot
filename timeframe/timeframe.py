@@ -26,15 +26,17 @@ class Timeframe:
   rsi = None
   macd = None
   macd_signal = None
+  count = 0
 
-  def __init__(self, interval, symbol, http_client, clbk = None, clbk_args = ['candles']):
+  def __init__(self, interval, symbol, http_client, websocket_client, clbk = None, clbk_args = ['candles']):
     self.interval = interval
     self.symbol = symbol
     self.clbk = clbk
     self.clbk_args = clbk_args
     self.set_candles(http_client)
-    self.thread = threading.Thread(target=self.update_candles, args=(http_client,))
-    self.thread.start()
+    self.update_candles(websocket_client)
+#    self.thread = threading.Thread(target=self.update_candles, args=(http_client,))
+#    self.thread.start()
 
   #############################
   #                           #
@@ -51,18 +53,31 @@ class Timeframe:
   def set_candles(self, client):
     self.candles = client.get_candles(self.symbol, self.interval["name"], INDEX + 1)
     self.set_indicators()
-    self.launch_strategy()
 
   def update_candles(self, client):
-    while True:
-      time.sleep(15)
-      new_candle = client.get_candles(self.symbol, self.interval["name"], 1)
-      if self.candles[INDEX, 0] < new_candle[0, 0]:
-        self.candles = np.append(np.delete(self.candles, 0, axis=0), [new_candle[0]], axis=0)
-      else:
-        self.candles[INDEX] = new_candle[0]
+    client.get_candles(self.update_candles_callback, self.symbol.lower(), self.interval["name"])
+
+  def update_candles_callback(self, candle):
+    self.count += 1
+    if self.candles[INDEX][0] == candle[0]:
+      self.candles[INDEX] = candle
+    else:
+      self.candles = np.append(np.delete(self.candles, 0, axis=0), [candle], axis=0)
+    if self.count > 14:
+      self.count = 0
       self.set_indicators()
       self.launch_strategy()
+
+#  def update_candles(self, client):
+#   while True:
+#      time.sleep(15)
+#      new_candle = client.get_candles(self.symbol, self.interval["name"], 1)
+#      if self.candles[INDEX, 0] < new_candle[0, 0]:
+#        self.candles = np.append(np.delete(self.candles, 0, axis=0), [new_candle[0]], axis=0)
+#      else:
+#        self.candles[INDEX] = new_candle[0]
+#      self.set_indicators()
+#      self.launch_strategy()
 
   def get_candles(self):
     columns = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume']
@@ -224,16 +239,3 @@ class Timeframe:
       ax = self.axes[0],
       volume=self.axes[2]
     )
-
-
-#
-#  def update_candles(self, client):
-#    client.connect(self.update_candles_callback, self.symbol.lower(), self.interval["name"])
-#
-#  def update_candles_callback(self, candle):
-#    if self.candles[INDEX][0] == candle[0]:
-#      self.candles[INDEX] = candle
-#      self.set_rsi(False)
-#    else:
-#      self.candles = np.append(np.delete(self.candles, 0, axis=0), [candle], axis=0)
-#      self.set_rsi(True)

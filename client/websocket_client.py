@@ -15,7 +15,7 @@ class WebSocketClient:
   def __init__(self, api_key_id, api_secret_key):
     self.client = SubscriptionClient(api_key=api_key_id, secret_key=api_secret_key)
 
-  def connect(self, clbk, symbol, interval):
+  def get_candles(self, clbk, symbol, interval):
     def callback(data_type: 'SubscribeMessageType', event: 'any'):
       if data_type == SubscribeMessageType.PAYLOAD:
         candle = np.array([ int(getattr(event.data, 'startTime')) ])

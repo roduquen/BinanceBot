@@ -27,14 +27,13 @@ class MACD_strategy:
   loss = 0
 
   def __init__(self, interval, symbol, min_quantity, portefolio, http_client, websocket_client):
-    websocket_client.get_market(self.callback_websocket, symbol.lower())
     self.http_client = http_client
     self.interval = interval
     self.symbol = symbol
     self.min_quantity = min_quantity
     self.portefolio = portefolio
     self.trade_value = portefolio / 25 # leverage
-    self.timeframe = Timeframe(interval, symbol, http_client, self.launch_strategy, self.members)
+    self.timeframe = Timeframe(interval, symbol, http_client, websocket_client, self.launch_strategy, self.members)
 
   def launch_strategy(self, values):
     uptrend = None
@@ -50,7 +49,7 @@ class MACD_strategy:
     self.macd = values[2]
     self.macd_signal = values[3]
     self.index = values[4]
-    if uptrend is not None:
+    if open is True:
       uptrend, downtrend, signal_up, macd_pos, macd_neg = self.trend_values(True, -1)
       uptrend2, downtrend2, signal_up2, macd_pos2, macd_neg2 = self.trend_values()
       if (uptrend is True and uptrend2 is True
@@ -61,10 +60,12 @@ class MACD_strategy:
         and signal_up is False and signal_up2 is True
         and macd_pos is True and macd_pos2 is True):
         self.enter_short()
-      if self.in_trade is True and self.target_reached is True:
-        self.take_profit = (self.take_profit + self.candles[self.index, 4]) / 2
+      if self.in_trade is True:
+        if self.target_reached is True:
+          self.take_profit = (self.take_profit + self.candles[self.index, 4]) / 2
+        self.strategy_launched(self.candles[self.index, 4])
 
-  def callback_websocket(self, market):
+  def strategy_launched(self, market):
     self.market_price = market
     if self.in_trade is True:
       if self.position == "LONG":
@@ -119,6 +120,7 @@ class MACD_strategy:
 
   def trend_values(self, first = False, padding = 0):
     index = self.index + padding
+    print(self.candles[index, 3], self.ema[index])
     uptrend = self.candles[index, 3] > self.ema[index]
     downtrend = self.candles[index, 2] < self.ema[index]
     signal_up = self.macd_signal[index] > self.macd[index]
