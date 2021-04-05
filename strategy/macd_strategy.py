@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import time
+from datetime import datetime
 import threading
 from timeframe.timeframe import Timeframe
 from binance_f.constant.test import *
@@ -41,81 +42,30 @@ class MACD_strategy:
     signal_up = None
     macd_pos = None
     macd_neg = None
-    open = False
+    opened = False
     if self.candles is not None:
-      open = True
+      opened = True
     self.candles = values[0]
     self.ema = values[1]
     self.macd = values[2]
     self.macd_signal = values[3]
     self.index = values[4]
-    if open is True:
+    self.market_price = self.candles[self.index, 4]
+    if opened is False:
+      self.enter_short()
+    if opened is True:
       uptrend, downtrend, signal_up, macd_pos, macd_neg = self.trend_values(True, -1)
       uptrend2, downtrend2, signal_up2, macd_pos2, macd_neg2 = self.trend_values()
-      if (uptrend2 is True
-        and signal_up is True and signal_up2 is False
-        and macd_neg2 is True):
-        print(
-          "MAGESSTY : ",
-          self.symbol,
-          " UPTREND = ",
-          uptrend,
-          " DOWNTREND = ",
-          downtrend,
-          " SIGNAL UP = ",
-          signal_up,
-          " MACD_POS = ",
-          macd_pos,
-          " MACD_NEG = ",
-          macd_neg
-        )
-        print(
-          "MAGESSTY : ",
-          self.symbol,
-          " UPTREND2 = ",
-          uptrend2,
-          " DOWNTREND2 = ",
-          downtrend2,
-          " SIGNAL UP2 = ",
-          signal_up2,
-          " MACD_POS2 = ",
-          macd_pos2,
-          " MACD_NEG2 = ",
-          macd_neg2
-        )
-        self.enter_long()
-      elif (downtrend2 is True
-        and signal_up is False and signal_up2 is True
-        and macd_pos2 is True):
-        print(
-          "MAGESSTY : ",
-          self.symbol,
-          " UPTREND = ",
-          uptrend,
-          " DOWNTREND = ",
-          downtrend,
-          " SIGNAL UP = ",
-          signal_up,
-          " MACD_POS = ",
-          macd_pos,
-          " MACD_NEG = ",
-          macd_neg
-        )
-        print(
-          "MAGESSTY : ",
-          self.symbol,
-          " UPTREND2 = ",
-          uptrend2,
-          " DOWNTREND2 = ",
-          downtrend2,
-          " SIGNAL UP2 = ",
-          signal_up2,
-          " MACD_POS2 = ",
-          macd_pos2,
-          " MACD_NEG2 = ",
-          macd_neg2
-        )
-        self.enter_short()
+      if uptrend2:
+        if signal_up:
+          if not signal_up2:
+            if macd_neg2:
+              self.enter_long()
+      elif downtrend2:
+        if not signal_up:
+          if signal_up2:
+            if macd_pos2:
+              self.enter_short()
       if self.in_trade is True:
         if self.target_reached is True:
           self.take_profit = (self.take_profit + self.candles[self.index, 4]) / 2
@@ -128,22 +78,24 @@ class MACD_strategy:
         if market <= self.stop_loss:
           self.exit_position()
           self.loss += 1
-          print("MAGESSTY : ", self.symbol, ": TOTAL LOSS => ", self.loss, " TOTAL GAIN => ", self.profit)
+          print(datetime.now(), " : ", self.symbol, ": TOTAL LOSS => ", self.loss, " TOTAL GAIN => ", self.profit)
         if self.target_reached is True and market <= self.take_profit:
           self.exit_position()
           self.profit += 1
-          print("MAGESSTY : ", self.symbol, ": TOTAL LOSS => ", self.loss, " TOTAL GAIN => ", self.profit)
+          print(datetime.now(), " : ", self.symbol, ": TOTAL LOSS => ", self.loss, " TOTAL GAIN => ", self.profit)
         elif self.target_reached is False and market >= self.take_profit:
           self.start_grinding()
       else:
+        print(market, self.stop_loss)
         if market >= self.stop_loss:
           self.exit_position()
           self.loss += 1
-          print("MAGESSTY : ", self.symbol, ": TOTAL LOSS => ", self.loss, " TOTAL GAIN => ", self.profit)
+          print(datetime.now(), " : ", self.symbol, ": TOTAL LOSS => ", self.loss, " TOTAL GAIN => ", self.profit)
+        print(self.target_reached, market, self.take_profit)
         if self.target_reached is True and market >= self.take_profit:
           self.exit_position()
           self.profit += 1
-          print("MAGESSTY : ", self.symbol, ": TOTAL LOSS => ", self.loss, " TOTAL GAIN => ", self.profit)
+          print(datetime.now(), " : ", self.symbol, ": TOTAL LOSS => ", self.loss, " TOTAL GAIN => ", self.profit)
         elif self.target_reached is False and market <= self.take_profit:
           self.start_grinding()
 
@@ -152,12 +104,13 @@ class MACD_strategy:
     side = "SELL"
     if self.position == "SHORT":
       side = "BUY"
-    self.http_client.market_order(
+    result = self.http_client.market_order(
       side,
       self.symbol,
       self.quantity,
       true
     )
+    print(datetime.now(), " : ", self.symbol, " : ", self.position, " : Opened at => ", self.avg_price, " Closed at => ", result)
     self.position = None
     self.quantity = None
     self.avg_price = None
@@ -179,8 +132,8 @@ class MACD_strategy:
     uptrend = self.candles[index, 3] > self.ema[index]
     downtrend = self.candles[index, 2] < self.ema[index]
     signal_up = self.macd_signal[index] > self.macd[index]
-    macd_pos = self.macd[index] > 0.05
-    macd_neg = self.macd[index] < -0.05
+    macd_pos = self.macd[index] >= 0
+    macd_neg = self.macd[index] < 0
     return uptrend, downtrend, signal_up, macd_pos, macd_neg
 
   def compute_quantity(self):
@@ -204,7 +157,7 @@ class MACD_strategy:
         symbol,
         quantity
       )
-      print("MAGESSTY : Enter Long => ", self.avg_price)
+      print(datetime.now(), " : Enter Long => ", self.avg_price)
       self.quantity = quantity
       self.stop_loss = self.avg_price * 0.99
       self.take_profit = self.avg_price * 1.0125
@@ -223,9 +176,9 @@ class MACD_strategy:
         symbol,
         quantity
       )
-      print("MAGESSTY : Enter Short => ", self.avg_price)
+      print(datetime.now(), " : Enter Short => ", self.avg_price)
       self.quantity = quantity
       self.stop_loss = self.avg_price * 1.01
-      self.take_profit = self.avg_price * 0,9875
+      self.take_profit = self.avg_price * 0.9875
       self.position = "SHORT"
       self.in_trade = True

@@ -63,7 +63,7 @@ class Timeframe:
       self.candles[INDEX] = candle
     else:
       self.candles = np.append(np.delete(self.candles, 0, axis=0), [candle], axis=0)
-    if self.count > 14:
+    if self.count > 2:
       self.count = 0
       self.set_indicators()
       self.launch_strategy()
