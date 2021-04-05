@@ -52,9 +52,9 @@ class MACD_strategy:
     if open is True:
       uptrend, downtrend, signal_up, macd_pos, macd_neg = self.trend_values(True, -1)
       uptrend2, downtrend2, signal_up2, macd_pos2, macd_neg2 = self.trend_values()
-      if (uptrend is True and uptrend2 is True
+      if (uptrend2 is True
         and signal_up is True and signal_up2 is False
-        and macd_neg is True and macd_neg2 is True):
+        and macd_neg2 is True):
         print(
           "MAGESSTY : ",
           self.symbol,
@@ -84,9 +84,9 @@ class MACD_strategy:
           macd_neg2
         )
         self.enter_long()
-      elif (downtrend is True and downtrend2 is True
+      elif (downtrend2 is True
         and signal_up is False and signal_up2 is True
-        and macd_pos is True and macd_pos2 is True):
+        and macd_pos2 is True):
         print(
           "MAGESSTY : ",
           self.symbol,
