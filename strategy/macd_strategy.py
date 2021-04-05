@@ -55,10 +55,66 @@ class MACD_strategy:
       if (uptrend is True and uptrend2 is True
         and signal_up is True and signal_up2 is False
         and macd_neg is True and macd_neg2 is True):
+          print(
+            "MAGESSTY : ",
+            self.symbol,
+            " UPTREND = ",
+            uptrend,
+            " DOWNTREND = ",
+            downtrend,
+            " SIGNAL UP = ",
+            signal_up,
+            " MACD_POS = ",
+            macd_pos,
+            " MACD_NEG = ",
+            macd_neg
+          )
+          print(
+            "MAGESSTY : ",
+            self.symbol,
+            " UPTREND2 = ",
+            uptrend2,
+            " DOWNTREND2 = ",
+            downtrend2,
+            " SIGNAL UP2 = ",
+            signal_up2,
+            " MACD_POS2 = ",
+            macd_pos2,
+            " MACD_NEG2 = ",
+            macd_neg2
+          )
         self.enter_long()
       elif (downtrend is True and downtrend2 is True
         and signal_up is False and signal_up2 is True
         and macd_pos is True and macd_pos2 is True):
+          print(
+            "MAGESSTY : ",
+            self.symbol,
+            " UPTREND = ",
+            uptrend,
+            " DOWNTREND = ",
+            downtrend,
+            " SIGNAL UP = ",
+            signal_up,
+            " MACD_POS = ",
+            macd_pos,
+            " MACD_NEG = ",
+            macd_neg
+          )
+          print(
+            "MAGESSTY : ",
+            self.symbol,
+            " UPTREND2 = ",
+            uptrend2,
+            " DOWNTREND2 = ",
+            downtrend2,
+            " SIGNAL UP2 = ",
+            signal_up2,
+            " MACD_POS2 = ",
+            macd_pos2,
+            " MACD_NEG2 = ",
+            macd_neg2
+          )
         self.enter_short()
       if self.in_trade is True:
         if self.target_reached is True:
@@ -120,28 +176,11 @@ class MACD_strategy:
 
   def trend_values(self, first = False, padding = 0):
     index = self.index + padding
-    print(self.candles[index, 3], self.ema[index])
     uptrend = self.candles[index, 3] > self.ema[index]
     downtrend = self.candles[index, 2] < self.ema[index]
     signal_up = self.macd_signal[index] > self.macd[index]
     macd_pos = self.macd[index] > 0.05
     macd_neg = self.macd[index] < -0.05
-    print(
-      "MAGESSTY : ",
-      self.symbol,
-      " FIRST VALUES = ",
-      first,
-      " UPTREND = ",
-      uptrend,
-      " DOWNTREND = ",
-      downtrend,
-      " SIGNAL UP = ",
-      signal_up,
-      " MACD_POS = ",
-      macd_pos,
-      " MACD_NEG = ",
-      macd_neg
-    )
     return uptrend, downtrend, signal_up, macd_pos, macd_neg
 
   def compute_quantity(self):
