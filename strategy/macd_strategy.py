@@ -140,6 +140,14 @@ class MACD_strategy:
     value = self.trade_value * 25 # leverage
     quantity = value / price
     quantity = quantity - quantity % min_quantity
+    if min_quantity == 1:
+      quantity = round(quantity)
+    elif min_quantity == 0.1:
+      quantity = round(quantity, 1)
+    elif min_quantity == 0.01:
+      quantity = round(quantity, 2)
+    elif min_quantity == 0.001:
+      quantity = round(quantity, 3)
     return quantity
 
 
