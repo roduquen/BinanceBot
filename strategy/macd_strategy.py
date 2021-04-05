@@ -147,7 +147,7 @@ class MACD_strategy:
     macd_pos = self.macd[index] >= 0
     macd_neg = self.macd[index] < 0
     possible_long = self.candles[index, 4] >= self.ema[index] * 1.0125
-    possible_short = self.candels[index, 4] <= self.ema[index] * 0.9875
+    possible_short = self.candles[index, 4] <= self.ema[index] * 0.9875
     return uptrend, downtrend, signal_up, macd_pos, macd_neg, possible_long, possible_short
 
   def compute_quantity(self):
