@@ -69,7 +69,7 @@ class MACD_strategy:
                 self.enter_short()
       if self.in_trade is True:
         if self.target_reached is True:
-          new_take_profit = self.ema[self.index - 1] * 0.35 + self.candles[self.index - 1, 4] * 0.65
+          new_take_profit = self.ema[self.index - 1] * 0.30 + self.candles[self.index - 1, 4] * 0.70
           if self.position == "LONG":
             if new_take_profit > self.take_profit:
               self.take_profit = new_take_profit
