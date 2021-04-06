@@ -27,6 +27,7 @@ class MACD_strategy:
   thread = None
   profit = 0
   loss = 0
+  wait = False
 
   def __init__(self, interval, symbol, min_quantity, portefolio, http_client, websocket_client):
     self.http_client = http_client
@@ -115,13 +116,15 @@ class MACD_strategy:
       True
     )
     print(datetime.now(), " : ", self.symbol, " : ", self.position, " : Opened at => ", self.avg_price, " Closed at => ", result)
+    self.wait = True
     self.position = None
     self.quantity = None
     self.avg_price = None
     self.stop_loss = None
     self.take_profit = None
-    time.sleep(interval["ms"] / 500)
     self.in_trade = False
+    time.sleep(interval["ms"] / 500)
+    self.wait = False
 
   def start_grinding(self):
     def callback():
@@ -173,7 +176,7 @@ class MACD_strategy:
 
 
   def enter_long(self):
-    if self.in_trade is False:
+    if self.in_trade is False and self.wait is False:
       side = "BUY"
       symbol = self.symbol
       quantity = self.compute_quantity()
@@ -190,7 +193,7 @@ class MACD_strategy:
       self.position = "LONG"
 
   def enter_short(self):
-    if self.in_trade is False:
+    if self.in_trade is False and self.wait is False:
       side = "SELL"
       symbol = self.symbol
       quantity = self.compute_quantity()
