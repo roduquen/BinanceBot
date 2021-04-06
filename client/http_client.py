@@ -1,5 +1,6 @@
 from binance_f import RequestClient
 import numpy as np
+import time
 from binance_f.base.printobject import *
 
 class HTTPClient:
@@ -40,6 +41,7 @@ class HTTPClient:
       reduceOnly=reduce_only
     )
     order_id = int(getattr(result, 'orderId'))
+    time.sleep(5)
     return self.get_avg_price(symbol, order_id)
 
   def get_avg_price(self, symbol, order_id):

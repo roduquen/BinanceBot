@@ -105,7 +105,6 @@ class MACD_strategy:
           self.start_grinding()
 
   def exit_position(self):
-    self.in_trade = False
     side = "SELL"
     if self.position == "SHORT":
       side = "BUY"
@@ -113,7 +112,7 @@ class MACD_strategy:
       side,
       self.symbol,
       self.quantity,
-      true
+      True
     )
     print(datetime.now(), " : ", self.symbol, " : ", self.position, " : Opened at => ", self.avg_price, " Closed at => ", result)
     self.position = None
@@ -121,6 +120,8 @@ class MACD_strategy:
     self.avg_price = None
     self.stop_loss = None
     self.take_profit = None
+    time.sleep(interval["ms"] / 500)
+    self.in_trade = False
 
   def start_grinding(self):
     def callback():
@@ -176,6 +177,7 @@ class MACD_strategy:
       side = "BUY"
       symbol = self.symbol
       quantity = self.compute_quantity()
+      self.in_trade = True
       self.avg_price = self.http_client.market_order(
         side,
         symbol,
@@ -186,13 +188,13 @@ class MACD_strategy:
       self.stop_loss = self.avg_price * 0.99
       self.take_profit = self.avg_price * 1.0125
       self.position = "LONG"
-      self.in_trade = True
 
   def enter_short(self):
     if self.in_trade is False:
       side = "SELL"
       symbol = self.symbol
       quantity = self.compute_quantity()
+      self.in_trade = True
       self.avg_price = self.http_client.market_order(
         side,
         symbol,
@@ -203,4 +205,3 @@ class MACD_strategy:
       self.stop_loss = self.avg_price * 1.01
       self.take_profit = self.avg_price * 0.9875
       self.position = "SHORT"
-      self.in_trade = True
