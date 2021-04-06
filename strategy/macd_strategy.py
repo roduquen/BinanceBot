@@ -24,6 +24,7 @@ class MACD_strategy:
   take_profit = None
   target_reached = False
   market_price = None
+  thread = None
   profit = 0
   loss = 0
 
@@ -68,7 +69,7 @@ class MACD_strategy:
                 self.enter_short()
       if self.in_trade is True:
         if self.target_reached is True:
-          new_take_profit = (self.ema[self.index - 1] + self.candles[self.index - 1, 4]) / 2
+          new_take_profit = self.ema[self.index - 1] * 0.35 + self.candles[self.index - 1, 4] * 0.65
           if self.position == "LONG":
             if new_take_profit > self.take_profit:
               self.take_profit = new_take_profit
@@ -124,12 +125,15 @@ class MACD_strategy:
   def start_grinding(self):
     def callback():
       time.sleep(30)
-      if ((self.position == "LONG" and self.market_value >= self.take_profit)
-        or (position == "SHORT" and self.market_value <= self.take_profit)):
+      if ((self.position == "LONG" and self.market_price >= self.take_profit)
+        or (position == "SHORT" and self.market_price <= self.take_profit)):
         self.target_reached = True
-      return
-    self.thread = threading.Thread(target=callback)
-    self.thread.start()
+        return
+    if self.thread is None:
+      self.thread = threading.Thread(target=callback)
+      self.thread.start()
+      self.thread.join()
+      self.thread = None
 
   def trend_values(self, first = False, padding = 0):
     index = self.index + padding
@@ -156,14 +160,14 @@ class MACD_strategy:
     value = self.trade_value * 25 # leverage
     quantity = value / price
     quantity = quantity - quantity % min_quantity
-    if min_quantity == 1:
-      quantity = round(quantity)
-    elif min_quantity == 0.1:
-      quantity = round(quantity, 1)
+    quantity /= min_quantity
+    quantity = round(quantity)
+    if min_quantity == 0.1:
+      quantity = round(quantity / 10, 1)
     elif min_quantity == 0.01:
-      quantity = round(quantity, 2)
+      quantity = round(quantity / 100, 2)
     elif min_quantity == 0.001:
-      quantity = round(quantity, 3)
+      quantity = round(quantity / 1000, 3)
     return quantity
 
 
