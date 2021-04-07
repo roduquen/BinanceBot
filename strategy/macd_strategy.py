@@ -149,7 +149,7 @@ class MACD_strategy:
     i = index - 11
     downtrend = True
     while downtrend and i < index:
-      downtrend = (self.candles[i, 3] + self.candles[i, 2]) < self.ema[i]
+      downtrend = (self.candles[i, 3] + self.candles[i, 2]) / 2 < self.ema[i]
       i += 1
     signal_up = self.macd_signal[index] > self.macd[index]
     macd_pos = self.macd[index] >= 0
@@ -176,35 +176,37 @@ class MACD_strategy:
 
 
   def enter_long(self):
-    if self.in_trade is False and self.wait is False:
-      side = "BUY"
-      symbol = self.symbol
-      quantity = self.compute_quantity()
-      self.in_trade = True
-      self.avg_price = self.http_client.market_order(
-        side,
-        symbol,
-        quantity
-      )
-      print(datetime.now(), " : Enter Long => ", self.avg_price)
-      self.quantity = quantity
-      self.stop_loss = self.avg_price * 0.99
-      self.take_profit = self.avg_price * 1.0125
-      self.position = "LONG"
+    if self.in_trade is False:
+      if self.wait is False:
+        side = "BUY"
+        symbol = self.symbol
+        quantity = self.compute_quantity()
+        self.in_trade = True
+        self.avg_price = self.http_client.market_order(
+          side,
+          symbol,
+          quantity
+        )
+        print(datetime.now(), " : Enter Long => ", self.avg_price)
+        self.quantity = quantity
+        self.stop_loss = self.avg_price * 0.99
+        self.take_profit = self.avg_price * 1.0125
+        self.position = "LONG"
 
   def enter_short(self):
-    if self.in_trade is False and self.wait is False:
-      side = "SELL"
-      symbol = self.symbol
-      quantity = self.compute_quantity()
-      self.in_trade = True
-      self.avg_price = self.http_client.market_order(
-        side,
-        symbol,
-        quantity
-      )
-      print(datetime.now(), " : Enter Short => ", self.avg_price)
-      self.quantity = quantity
-      self.stop_loss = self.avg_price * 1.01
-      self.take_profit = self.avg_price * 0.9875
-      self.position = "SHORT"
+    if self.in_trade is False:
+      if self.wait is False:
+        side = "SELL"
+        symbol = self.symbol
+        quantity = self.compute_quantity()
+        self.in_trade = True
+        self.avg_price = self.http_client.market_order(
+          side,
+          symbol,
+          quantity
+        )
+        print(datetime.now(), " : Enter Short => ", self.avg_price)
+        self.quantity = quantity
+        self.stop_loss = self.avg_price * 1.01
+        self.take_profit = self.avg_price * 0.9875
+        self.position = "SHORT"
