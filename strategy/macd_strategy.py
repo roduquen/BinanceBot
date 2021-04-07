@@ -54,20 +54,18 @@ class MACD_strategy:
     self.index = values[4]
     self.market_price = self.candles[self.index, 4]
     if opened is True:
-      uptrend, downtrend, signal_up, macd_pos, macd_neg, l, s = self.trend_values(True, -1)
-      uptrend2, downtrend2, signal_up2, macd_pos2, macd_neg2, possible_long, possible_short = self.trend_values()
-      if possible_long:
-        if uptrend2:
-          if signal_up:
-            if not signal_up2:
-              if macd_neg2:
-                self.enter_long()
-      elif possible_short:
-        if downtrend2:
-          if not signal_up:
-            if signal_up2:
-              if macd_pos2:
-                self.enter_short()
+      uptrend, downtrend, signal_up, macd_pos, macd_neg = self.trend_values(True, -1)
+      uptrend2, downtrend2, signal_up2, macd_pos2, macd_neg2 = self.trend_values()
+      if uptrend2:
+        if signal_up:
+          if not signal_up2:
+            if macd_neg2:
+              self.enter_long()
+      elif downtrend2:
+        if not signal_up:
+          if signal_up2:
+            if macd_pos2:
+              self.enter_short()
       if self.in_trade is True:
         if self.target_reached is True:
           new_take_profit = self.ema[self.index - 1] * 0.15 + self.candles[self.index - 1, 4] * 0.70 + self.take_profit * 0.15
@@ -154,9 +152,7 @@ class MACD_strategy:
     signal_up = self.macd_signal[index] > self.macd[index]
     macd_pos = self.macd[index] >= 0
     macd_neg = self.macd[index] < 0
-    possible_long = self.candles[index, 4] >= self.ema[index] * 1.0125
-    possible_short = self.candles[index, 4] <= self.ema[index] * 0.9875
-    return uptrend, downtrend, signal_up, macd_pos, macd_neg, possible_long, possible_short
+    return uptrend, downtrend, signal_up, macd_pos, macd_neg
 
   def compute_quantity(self):
     price = self.market_price
