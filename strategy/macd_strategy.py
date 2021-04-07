@@ -71,7 +71,7 @@ class MACD_strategy:
         if self.target_reached is True:
           if time.time_ns() / 1000000 - self.interval["ms"] / 5 > self.last_take_update:
             self.last_take_update = time.time_ns() / 1000000
-            new_take_profit = self.ema[self.index - 1] * 0.15 + self.candles[self.index - 1, 4] * 0.70 + self.take_profit * 0.15
+            new_take_profit = self.ema[self.index] * 0.15 + self.candles[self.index, 4] * 0.70 + self.take_profit * 0.15
             if self.position == "LONG":
               if new_take_profit > self.take_profit:
                 self.take_profit = new_take_profit
