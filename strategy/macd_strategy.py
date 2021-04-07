@@ -121,7 +121,7 @@ class MACD_strategy:
     self.stop_loss = None
     self.take_profit = None
     self.in_trade = False
-    time.sleep(interval["ms"] / 500)
+    time.sleep(self.interval["ms"] / 500)
     self.wait = False
 
   def start_grinding(self):
@@ -186,7 +186,7 @@ class MACD_strategy:
         print(datetime.now(), " : Enter Long => ", self.avg_price)
         self.quantity = quantity
         self.stop_loss = self.avg_price * 0.99
-        self.take_profit = self.avg_price * 1.0125
+        self.take_profit = self.avg_price * 1.015
         self.position = "LONG"
 
   def enter_short(self):
@@ -204,5 +204,5 @@ class MACD_strategy:
         print(datetime.now(), " : Enter Short => ", self.avg_price)
         self.quantity = quantity
         self.stop_loss = self.avg_price * 1.01
-        self.take_profit = self.avg_price * 0.9875
+        self.take_profit = self.avg_price * 0.985
         self.position = "SHORT"
