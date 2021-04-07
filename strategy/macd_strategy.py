@@ -28,6 +28,7 @@ class MACD_strategy:
   profit = 0
   loss = 0
   wait = False
+  last_take_update = 0
 
   def __init__(self, interval, symbol, min_quantity, portefolio, http_client, websocket_client):
     self.http_client = http_client
@@ -68,13 +69,15 @@ class MACD_strategy:
               self.enter_short()
       if self.in_trade is True:
         if self.target_reached is True:
-          new_take_profit = self.ema[self.index - 1] * 0.15 + self.candles[self.index - 1, 4] * 0.70 + self.take_profit * 0.15
-          if self.position == "LONG":
-            if new_take_profit > self.take_profit:
-              self.take_profit = new_take_profit
-          else:
-            if new_take_profit < self.take_profit:
-              self.take_profit = new_take_profit
+          if time.time_ns() / 1000000 - self.interval["ms"] / 5 > self.last_take_update:
+            self.last_take_update = time.time_ns() / 1000000
+            new_take_profit = self.ema[self.index - 1] * 0.15 + self.candles[self.index - 1, 4] * 0.70 + self.take_profit * 0.15
+            if self.position == "LONG":
+              if new_take_profit > self.take_profit:
+                self.take_profit = new_take_profit
+            else:
+              if new_take_profit < self.take_profit:
+                self.take_profit = new_take_profit
         self.strategy_launched(self.candles[self.index, 4])
 
   def strategy_launched(self, market):
@@ -129,6 +132,7 @@ class MACD_strategy:
       time.sleep(30)
       if ((self.position == "LONG" and self.market_price >= self.take_profit)
         or (position == "SHORT" and self.market_price <= self.take_profit)):
+        self.last_take_update = time.time_ns() / 1000000
         self.target_reached = True
         return
     if self.thread is None:
