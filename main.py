@@ -61,7 +61,7 @@ kava = MACD_strategy({"name" : "30m", "ms" : 1800000}, "KAVAUSDT", 0.1, 300, htt
 band = MACD_strategy({"name" : "30m", "ms" : 1800000}, "BANDUSDT", 0.1, 300, http_client, websocket_client)
 rlc = MACD_strategy({"name" : "30m", "ms" : 1800000}, "RLCUSDT", 0.1, 300, http_client, websocket_client)
 
-wave = MACD_strategy({"name" : "30m", "ms" : 1800000}, "WAVEUSDT", 0.1, 300, http_client, websocket_client)
+waves = MACD_strategy({"name" : "30m", "ms" : 1800000}, "WAVESUSDT", 0.1, 300, http_client, websocket_client)
 mkr = MACD_strategy({"name" : "30m", "ms" : 1800000}, "MKRUSDT", 0.001, 300, http_client, websocket_client)
 snx = MACD_strategy({"name" : "30m", "ms" : 1800000}, "SNXUSDT", 0.1, 300, http_client, websocket_client)
 defi = MACD_strategy({"name" : "30m", "ms" : 1800000}, "DEFIUSDT", 0.001, 300, http_client, websocket_client)
