@@ -7,8 +7,7 @@ import sys
 
 http_client = HTTPClient(api_key_id, secret_key)
 websocket_client = WebSocketClient(api_key_id, secret_key)
-
-pool = sys.argv[0]
+pool = sys.argv[1]
 
 if pool == "1":
   btc = MACD_strategy({"name" : "30m", "ms" : 1800000}, "BTCUSDT", 0.001, 2100, http_client, websocket_client)

@@ -84,10 +84,18 @@ class MACD_strategy:
     self.market_price = market
     if self.in_trade is True:
       if self.position == "LONG":
-        if market <= self.stop_loss:
-          self.exit_position()
+        if market < self.stop_loss:
           self.loss += 1
           print(datetime.now(), " : ", self.symbol, ": TOTAL LOSS => ", self.loss, " TOTAL GAIN => ", self.profit)
+          self.wait = True
+          self.position = None
+          self.quantity = None
+          self.avg_price = None
+          self.stop_loss = None
+          self.take_profit = None
+          self.in_trade = False
+          time.sleep(self.interval["ms"] / 500)
+          self.wait = False
         if self.target_reached is True and market <= self.take_profit:
           self.exit_position()
           self.profit += 1
@@ -192,6 +200,11 @@ class MACD_strategy:
         self.stop_loss = self.avg_price * 0.99
         self.take_profit = self.avg_price * 1.015
         self.position = "LONG"
+        self.http_client.stop_market_order(
+          "SELL",
+          symbol,
+          self.stop_loss
+        )
 
   def enter_short(self):
     if self.in_trade is False:
@@ -210,3 +223,8 @@ class MACD_strategy:
         self.stop_loss = self.avg_price * 1.01
         self.take_profit = self.avg_price * 0.985
         self.position = "SHORT"
+        self.http_client.stop_market_order(
+          "BUY",
+          symbol,
+          self.stop_loss
+        )

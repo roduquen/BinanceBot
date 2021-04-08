@@ -3,6 +3,7 @@ from binance_f import SubscriptionClient
 from binance_f.model import *
 from binance_f.exception.binanceapiexception import BinanceApiException
 from binance_f.base.printobject import *
+import os
 
 class WebSocketClient:
   members = [
@@ -41,5 +42,4 @@ class WebSocketClient:
 
   def error(self, e: 'BinanceApiException'):
     print(e.error_code + e.error_message)
-    exit()
-
+    os._exit(-1)

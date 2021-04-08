@@ -44,6 +44,15 @@ class HTTPClient:
     time.sleep(5)
     return self.get_avg_price(symbol, order_id)
 
+  def stop_market_order(self, side, symbol, stop_price):
+    result = self.client.post_order(
+      symbol=symbol,
+      side=side,
+      ordertype="STOP_MARKET",
+      stopPrice=stop_price,
+      closePosition=True
+    )
+
   def get_avg_price(self, symbol, order_id):
     result = self.client.get_order(symbol=symbol, orderId=order_id)
     return float(getattr(result, 'avgPrice'))
