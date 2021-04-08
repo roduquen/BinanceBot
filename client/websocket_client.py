@@ -41,4 +41,5 @@ class WebSocketClient:
 
   def error(self, e: 'BinanceApiException'):
     print(e.error_code + e.error_message)
+    exit()
 
