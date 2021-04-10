@@ -32,6 +32,7 @@ class MACD_strategy:
 
   def __init__(self, interval, symbol, min_quantity, portefolio, http_client, websocket_client):
     self.http_client = http_client
+    http_client.client.change_initial_leverage(symbol=symbol, leverage=35)
     self.interval = interval
     self.symbol = symbol
     self.min_quantity = min_quantity
@@ -75,7 +76,7 @@ class MACD_strategy:
             if self.position == "LONG":
               if new_take_profit > self.take_profit:
                 self.take_profit = new_take_profit
-            else:
+            elif self.position == "SHORT":
               if new_take_profit < self.take_profit:
                 self.take_profit = new_take_profit
         self.strategy_launched(self.candles[self.index, 4])
@@ -84,25 +85,17 @@ class MACD_strategy:
     self.market_price = market
     if self.in_trade is True:
       if self.position == "LONG":
-        if market < self.stop_loss:
+        if market <= self.stop_loss:
+          self.exit_position()
           self.loss += 1
           print(datetime.now(), " : ", self.symbol, ": TOTAL LOSS => ", self.loss, " TOTAL GAIN => ", self.profit)
-          self.wait = True
-          self.position = None
-          self.quantity = None
-          self.avg_price = None
-          self.stop_loss = None
-          self.take_profit = None
-          self.in_trade = False
-          time.sleep(self.interval["ms"] / 500)
-          self.wait = False
         if self.target_reached is True and market <= self.take_profit:
           self.exit_position()
           self.profit += 1
           print(datetime.now(), " : ", self.symbol, ": TOTAL LOSS => ", self.loss, " TOTAL GAIN => ", self.profit)
         elif self.target_reached is False and market >= self.take_profit:
           self.start_grinding()
-      else:
+      elif self.position == "SHORT":
         if market >= self.stop_loss:
           self.exit_position()
           self.loss += 1
@@ -131,8 +124,9 @@ class MACD_strategy:
     self.avg_price = None
     self.stop_loss = None
     self.take_profit = None
+    self.target_reached = False
     self.in_trade = False
-    time.sleep(self.interval["ms"] / 500)
+    time.sleep(36000)
     self.wait = False
 
   def start_grinding(self):
@@ -151,15 +145,15 @@ class MACD_strategy:
 
   def trend_values(self, first = False, padding = 0):
     index = self.index + padding
-    i = index - 11
+    i = index - 20
     uptrend = True
     while uptrend and i < index:
-      uptrend = (self.candles[i, 3] + self.candles[i, 2]) / 2 > self.ema[i]
+      uptrend = self.candles[i, 3] > self.ema[i]
       i += 1
-    i = index - 11
+    i = index - 20
     downtrend = True
     while downtrend and i < index:
-      downtrend = (self.candles[i, 3] + self.candles[i, 2]) / 2 < self.ema[i]
+      downtrend = self.candles[i, 2] < self.ema[i]
       i += 1
     signal_up = self.macd_signal[index] > self.macd[index]
     macd_pos = self.macd[index] >= 0
@@ -175,11 +169,11 @@ class MACD_strategy:
     quantity /= min_quantity
     quantity = round(quantity)
     if min_quantity == 0.1:
-      quantity = round(quantity / 10, 1)
+      quantity = "{:0.0{}f}".format(quantity / 10, 1)
     elif min_quantity == 0.01:
-      quantity = round(quantity / 100, 2)
+      quantity = "{:0.0{}f}".format(quantity / 100, 2)
     elif min_quantity == 0.001:
-      quantity = round(quantity / 1000, 3)
+      quantity = "{:0.0{}f}".format(quantity / 1000, 3)
     return quantity
 
 
@@ -200,11 +194,6 @@ class MACD_strategy:
         self.stop_loss = self.avg_price * 0.99
         self.take_profit = self.avg_price * 1.015
         self.position = "LONG"
-        self.http_client.stop_market_order(
-          "SELL",
-          symbol,
-          self.stop_loss
-        )
 
   def enter_short(self):
     if self.in_trade is False:
@@ -223,8 +212,3 @@ class MACD_strategy:
         self.stop_loss = self.avg_price * 1.01
         self.take_profit = self.avg_price * 0.985
         self.position = "SHORT"
-        self.http_client.stop_market_order(
-          "BUY",
-          symbol,
-          self.stop_loss
-        )
