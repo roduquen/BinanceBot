@@ -33,7 +33,6 @@ class MACD_strategy:
 
   def __init__(self, interval, symbol, min_quantity, portefolio, http_client, websocket_client):
     self.http_client = http_client
-    http_client.client.change_initial_leverage(symbol=symbol, leverage=35)
     self.interval = interval
     self.symbol = symbol
     self.min_quantity = min_quantity
