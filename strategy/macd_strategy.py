@@ -16,6 +16,7 @@ class MACD_strategy:
   ]
   candles = None
   ema = None
+  ema_50 = None
   macd = None
   macd_signal = None
   in_trade = False
@@ -55,9 +56,10 @@ class MACD_strategy:
         opened = True
       self.candles = values[0]
       self.ema = values[1]
-      self.macd = values[2]
-      self.macd_signal = values[3]
-      self.index = values[4]
+      self.ema_50 = values[2]
+      self.macd = values[3]
+      self.macd_signal = values[4]
+      self.index = values[5]
       self.market_price = self.candles[self.index, 4]
       if opened is True:
         uptrend, downtrend, signal_up, macd_pos, macd_neg = self.trend_values(True, -1)
@@ -76,7 +78,7 @@ class MACD_strategy:
           if self.target_reached is True:
             if time.time_ns() / 1000000 - self.interval["ms"] / 5 > self.last_take_update:
               self.last_take_update = time.time_ns() / 1000000
-              new_take_profit = self.ema[self.index] * 0.15 + self.candles[self.index, 4] * 0.70 + self.take_profit * 0.15
+              new_take_profit = self.candles[self.index, 2] * 0.2 + self.candles[self.index, 3] * 0.2 + self.take_profit * 0.4 + self.ema_50[self.index] * 0.2
               if self.position == "LONG":
                 if new_take_profit > self.take_profit:
                   self.take_profit = new_take_profit
@@ -116,8 +118,8 @@ class MACD_strategy:
             self.start_grinding()
 
   def exit_position(self):
-    self.wait = True
     self.wait_time = time.time_ns() / 1000000
+    self.wait = True
     side = "SELL"
     if self.position == "SHORT":
       side = "BUY"

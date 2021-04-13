@@ -23,6 +23,7 @@ class Timeframe:
   ]
   candles = None
   ema = None
+  ema_50 = None
   rsi = None
   macd = None
   macd_signal = None
@@ -88,6 +89,7 @@ class Timeframe:
           array.append(self.candles)
         elif member == 'ema':
           array.append(self.ema)
+          array.append(self.ema_50)
         elif member == 'rsi':
           array.append(self.rsi)
         elif member == 'macd':
@@ -107,6 +109,7 @@ class Timeframe:
     for member in self.clbk_args:
       if member == 'ema':
         self.set_ema()
+        self.set_ema_50()
       elif member == 'rsi':
         self.set_rsi()
       elif member == 'macd':
@@ -124,6 +127,10 @@ class Timeframe:
 
   def set_ema(self):
     EMA_SIZE = 100
+    self.ema = compute_ema(self.candles[:, 4], EMA_SIZE)
+
+  def set_ema_50(self):
+    EMA_SIZE = 50
     self.ema = compute_ema(self.candles[:, 4], EMA_SIZE)
 
   #############################

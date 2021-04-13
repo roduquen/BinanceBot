@@ -17,13 +17,8 @@ class HTTPClient:
     self.client = RequestClient(api_key=api_key_id, secret_key=api_secret_key)
     self.mutex = threading.Lock()
 
-  def wait_next_call(self):
-    self.mutex.acquire()
-    time.sleep(5)
-    self.mutex.release()
-
   def get_candles(self, symbol, interval, amount):
-    self.wait_next_call()
+    self.mutex.acquire()
     candles = self.client.get_candlestick_data(
       symbol=symbol,
       interval=interval,
@@ -38,10 +33,12 @@ class HTTPClient:
         array = np.array([candle_x])
       else:
         array = np.append(array, [candle_x], axis=0)
+    time.sleep(5)
+    self.mutex.release()
     return array
 
   def market_order(self, side, symbol, quantity, reduce_only = False):
-    self.wait_next_call()
+    self.mutex.acquire()
     result = self.client.post_order(
       symbol=symbol,
       side=side,
@@ -51,10 +48,11 @@ class HTTPClient:
     )
     order_id = int(getattr(result, 'orderId'))
     time.sleep(5)
+    self.mutex.release()
     return self.get_avg_price(symbol, order_id)
 
   def stop_market_order(self, side, symbol, stop_price):
-    self.wait_next_call()
+    self.mutex.acquire()
     result = self.client.post_order(
       symbol=symbol,
       side=side,
@@ -62,8 +60,12 @@ class HTTPClient:
       stopPrice=stop_price,
       closePosition=True
     )
+    time.sleep(5)
+    self.mutex.release()
 
   def get_avg_price(self, symbol, order_id):
-    self.wait_next_call()
+    self.mutex.acquire()
     result = self.client.get_order(symbol=symbol, orderId=order_id)
+    time.sleep(5)
+    self.mutex.release()
     return float(getattr(result, 'avgPrice'))
